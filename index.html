@@ -16,14 +16,22 @@
       : defaultPrompt;
 
     const payload = {
-      instances: [{ prompt }],
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt
+            }
+          ]
+        }
+      ],
       parameters: { sampleCount: 1 }
     };
 
-    const apiKey = "AIzaSyAtQMUI7F0t4y2vOaVgG2mjVbYFvsSRRtA"; // ← ఇక్కడ మీ API key
+    const apiKey = "AIzaSyAW76I5gI8uA7ur2l1q_4eKjy1Zil73Kj4"; // Your new API key here
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
 
-    if (!apiKey || apiKey.includes("PASTE_YOUR_API_KEY_HERE")) {
+    if (!apiKey || apiKey.includes("YOUR_API_KEY")) {
       imageContainer.innerHTML = '';
       errorMessage.textContent = 'API key missing. Please configure it.';
       errorMessage.classList.remove('hidden');
@@ -38,10 +46,18 @@
         body: JSON.stringify(payload)
       });
 
-      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      if (result.predictions && result.predictions[0]?.bytesBase64Encoded) {
-        const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+      const result = await response.json();
+      console.log(result); // For debugging, check the actual response shape
+
+      // Adjust this path if the actual response differs
+      const base64Image = result.candidates?.[0]?.image?.imageBytes;
+
+      if (base64Image) {
+        const imageUrl = `data:image/png;base64,${base64Image}`;
         imageContainer.innerHTML = `<img src="${imageUrl}" alt="Generated pose">`;
       } else {
         throw new Error('No image returned');
