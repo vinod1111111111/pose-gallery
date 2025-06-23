@@ -1,166 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pose Gallery</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f0f4f8;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 20px;
-      box-sizing: border-box;
+<script type="module">
+  const imageContainer = document.getElementById('imageContainer');
+  const errorMessage = document.getElementById('errorMessage');
+  const generateImageBtn = document.getElementById('generateImageBtn');
+  const searchInput = document.getElementById('searchInput');
+
+  async function generateImage() {
+    imageContainer.innerHTML = '<div class="loading-spinner"></div>';
+    errorMessage.classList.add('hidden');
+    generateImageBtn.disabled = true;
+
+    const query = searchInput.value.trim();
+    const defaultPrompt = "A woman posing in various iconic styles, including seated, fashion, dance, and hand-on-hip. Clean white background, studio-lit.";
+    const prompt = query
+      ? `A woman demonstrating the '${query}' pose, professional lighting, minimal background.`
+      : defaultPrompt;
+
+    const payload = {
+      instances: [{ prompt }],
+      parameters: { sampleCount: 1 }
+    };
+
+    const apiKey = "AIzaSyAtQMUI7F0t4y2vOaVgG2mjVbYFvsSRRtA"; // ← ఇక్కడ మీ API key
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+    if (!apiKey || apiKey.includes("PASTE_YOUR_API_KEY_HERE")) {
+      imageContainer.innerHTML = '';
+      errorMessage.textContent = 'API key missing. Please configure it.';
+      errorMessage.classList.remove('hidden');
+      generateImageBtn.disabled = false;
+      return;
     }
-    .container {
-      background-color: #ffffff;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      padding: 30px;
-      max-width: 600px;
-      width: 100%;
-      text-align: center;
-    }
-    .image-placeholder {
-      width: 100%;
-      max-width: 400px;
-      height: 300px;
-      background-color: #e2e8f0;
-      border-radius: 12px;
-      margin: 20px auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #64748b;
-      font-size: 1.2rem;
-      font-weight: 600;
-      overflow: hidden;
-    }
-    .loading-spinner {
-      border: 4px solid rgba(0, 0, 0, 0.1);
-      border-left: 4px solid #3b82f6;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 20px auto;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      border-radius: 12px;
-    }
-    .button {
-      background-color: #3b82f6;
-      color: white;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      display: inline-block;
-      margin-top: 20px;
-    }
-    .button:hover {
-      background-color: #2563eb;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">Pose Gallery</h1>
 
-    <!-- Search bar -->
-    <input
-      type="text"
-      id="searchInput"
-      placeholder="Search pose style (e.g., yoga, fashion)..."
-      class="w-full px-4 py-3 mb-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-    <p class="text-gray-600 mb-6">
-      Explore iconic poses from fashion, pop culture, and art.
-    </p>
+      const result = await response.json();
 
-    <div id="imageContainer" class="image-placeholder">
-      <div class="loading-spinner"></div>
-    </div>
-
-    <div id="errorMessage" class="text-red-500 mt-4 hidden"></div>
-    <button id="generateImageBtn" class="button">Generate Image</button>
-  </div>
-
-  <script type="module">
-    const imageContainer = document.getElementById('imageContainer');
-    const errorMessage = document.getElementById('errorMessage');
-    const generateImageBtn = document.getElementById('generateImageBtn');
-    const searchInput = document.getElementById('searchInput');
-
-    async function generateImage() {
-      imageContainer.innerHTML = '<div class="loading-spinner"></div>';
-      errorMessage.classList.add('hidden');
-      generateImageBtn.disabled = true;
-
-      const query = searchInput.value.trim();
-      const defaultPrompt = "A woman posing in various iconic styles, including seated, fashion, dance, and hand-on-hip. Clean white background, studio-lit.";
-      const prompt = query
-        ? `A woman demonstrating the '${query}' pose, professional lighting, minimal background.`
-        : defaultPrompt;
-
-      const payload = {
-        instances: [{ prompt }],
-        parameters: { sampleCount: 1 }
-      };
-
-      const apiKey = "PASTE_YOUR_API_KEY_HERE"; // ← ఇక్కడ మీ Gemini API key పెట్టండి
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
-
-      if (!apiKey || apiKey.includes("PASTE_YOUR_API_KEY_HERE")) {
-        imageContainer.innerHTML = '';
-        errorMessage.textContent = 'API key missing. Please configure it.';
-        errorMessage.classList.remove('hidden');
-        generateImageBtn.disabled = false;
-        return;
+      if (result.predictions && result.predictions[0]?.bytesBase64Encoded) {
+        const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+        imageContainer.innerHTML = `<img src="${imageUrl}" alt="Generated pose">`;
+      } else {
+        throw new Error('No image returned');
       }
-
-      try {
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const result = await response.json();
-
-        if (result.predictions && result.predictions[0]?.bytesBase64Encoded) {
-          const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
-          imageContainer.innerHTML = `<img src="${imageUrl}" alt="Generated pose">`;
-        } else {
-          throw new Error('No image returned');
-        }
-      } catch (error) {
-        errorMessage.textContent = 'Image generation failed.';
-        errorMessage.classList.remove('hidden');
-        imageContainer.innerHTML = '';
-        console.error("Error:", error);
-      } finally {
-        generateImageBtn.disabled = false;
-      }
+    } catch (error) {
+      errorMessage.textContent = 'Image generation failed.';
+      errorMessage.classList.remove('hidden');
+      imageContainer.innerHTML = '';
+      console.error("Error:", error);
+    } finally {
+      generateImageBtn.disabled = false;
     }
+  }
 
-    window.onload = generateImage;
-    generateImageBtn.addEventListener('click', generateImage);
-  </script>
-</body>
-</html>
+  window.onload = generateImage;
+  generateImageBtn.addEventListener('click', generateImage);
+</script>
